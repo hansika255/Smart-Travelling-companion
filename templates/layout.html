@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Routes AI - Premium Travel Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage:    #b5c9b7;
+            --sage-lt: #e8f0e9;
+            --rose:    #e8c4bc;
+            --rose-lt: #f9eeec;
+            --sky:     #b8d4e0;
+            --sky-lt:  #e8f4f9;
+            --sand:    #e6d9c8;
+            --sand-lt: #faf6f1;
+            --lav:     #cac0d8;
+            --lav-lt:  #f2eff8;
+            --ink:     #2c3035;
+            --ink-mid: #4a5260;
+            --ink-soft:#7a8494;
+            --surface: #fdfcfb;
+            --border:  #ece7e0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--surface);
+            color: var(--ink);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d9d0c7' fill-opacity='0.18'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        h1, h2, h3, .display { font-family: 'Cormorant Garamond', serif; }
+
+        /* Nav */
+        nav.main-nav {
+            background: rgba(253,252,251,0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 1.35rem;
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, #6b9e73 0%, #4a8e97 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-sub {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+        }
+
+        /* SSE Badge */
+        .sse-badge-waiting {
+            background: #fff8ed;
+            border: 1px solid #f5d89a;
+            color: #b07d1a;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            padding: 4px 12px;
+            border-radius: 100px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 2px 16px rgba(44,48,53,0.04), 0 1px 3px rgba(44,48,53,0.03);
+        }
+        .card-inner {
+            background: var(--sand-lt);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #6b9e73 0%, #4a8e97 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 4px 14px rgba(74,142,151,0.22);
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .btn-ghost {
+            background: var(--sage-lt);
+            color: #4e7e56;
+            border: 1px solid var(--sage);
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-ghost:hover { background: #d5e8d7; }
+
+        .btn-dark {
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-dark:hover { background: #3d444c; }
+
+        /* Inputs */
+        .field-input {
+            width: 100%;
+            background: var(--sand-lt);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            transition: border 0.2s, background 0.2s;
+            outline: none;
+        }
+        .field-input:focus { background: #fff; border-color: #7ab8c0; }
+        .field-label {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 7px;
+        }
+
+        /* Section dividers */
+        .section-divider {
+            display: flex; align-items: center; gap: 12px; margin: 28px 0 22px;
+        }
+        .section-divider span {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--ink-mid);
+        }
+        .section-divider::before, .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Prose in output panels */
+        .prose-output { font-size: 0.85rem; line-height: 1.7; color: var(--ink-mid); }
+        .prose-output h1,.prose-output h2,.prose-output h3 { font-family:'Cormorant Garamond',serif; color:var(--ink); }
+        .prose-output ul { padding-left: 1.2em; list-style: disc; }
+        .prose-output p { margin-bottom: 0.6em; }
+
+        /* SOS Modal */
+        #sos-modal .sos-card {
+            background: #fff;
+            border: 1px solid #fcd0ca;
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        .sos-icon {
+            width: 68px; height: 68px;
+            background: #fef0ee;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            animation: bounce-slow 1.2s infinite;
+        }
+        @keyframes bounce-slow { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav class="main-nav sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <div class="logo-text">Happy Routes AI</div>
+                <div class="logo-sub">Premium Travel Intelligence</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="top-nav-sse-badge" class="sse-badge-waiting">
+                    Awaiting Device Synchronization...
+                </div>
+                {% if session.get('user_id') %}
+                    <span style="font-size:0.75rem;color:var(--ink-soft);">ID #{{ session['user_id'] }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="min-h-[calc(100vh-73px)]">
+        {% block content %}{% endblock %}
+    </main>
+
+    <div id="sos-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(44,48,53,0.7);backdrop-filter:blur(8px);">
+        <div class="sos-card">
+            <div class="sos-icon">
+                <svg width="32" height="32" fill="none" stroke="#d9534f" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--ink);margin-bottom:8px;">Critical Disturbance Detected</h3>
+            <p style="font-size:0.85rem;color:var(--ink-soft);margin-bottom:28px;line-height:1.6;">Your connected device registered an impact acceleration breach threshold. Are you safe?</p>
+            <div style="font-size:3rem;font-weight:800;color:#d9534f;margin-bottom:28px;font-family:'Cormorant Garamond',serif;" id="countdown-timer">10</div>
+            <div style="display:flex;gap:12px;">
+                <button onclick="dismissSOS()" style="flex:1;background:var(--ink);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:600;font-size:0.85rem;cursor:pointer;">
+                    Yes, I'm Safe
+                </button>
+                <button onclick="executeSOSDispatch()" style="flex:1;background:#d9534f;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:600;font-size:0.85rem;cursor:pointer;">
+                    No — Call SOS
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

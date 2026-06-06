@@ -1,0 +1,558 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.7; } }
+    @keyframes micGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(139, 128, 196, 0.4); } 50% { box-shadow: 0 0 0 10px rgba(139, 128, 196, 0.1); } }
+    
+    .hidden { display: none !important; }
+    .premium-scroll::-webkit-scrollbar { width: 6px; }
+    .premium-scroll::-webkit-scrollbar-track { background: transparent; }
+    .premium-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 10px; }
+    
+    /* Interactive Dashboard Tabs Navigation */
+    .dashboard-tab {
+        padding: 14px 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dashboard-tab:hover {
+        color: var(--ink);
+        background: rgba(0, 0, 0, 0.02);
+    }
+    .dashboard-tab.active {
+        color: #8b80c4;
+        border-bottom-color: #8b80c4;
+        background: rgba(139, 128, 196, 0.04);
+    }
+
+    .ota-row-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.2s ease;
+    }
+    .ota-row-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+        border-color: #cbd5e1;
+    }
+</style>
+
+<div style="max-width:1440px; margin:0 auto; padding:32px 24px 60px;">
+
+    <div style="background: linear-gradient(135deg, #2c4a52 0%, #3e634c 60%, #52785d 100%); border-radius:24px; padding:36px 40px; margin-bottom:32px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:20px; position:relative; overflow:hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.04);">
+        <div style="position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,0.06);"></div>
+        <div style="position:absolute; right:60px; bottom:-50px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.04);"></div>
+
+        <div style="position:relative;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                <p style="font-size:0.68rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.65); margin-bottom:0;">Travel Command Centre</p>
+                <div id="dashboard-status-badge" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:0.62rem; font-weight:700; letter-spacing:0.06em; padding:2px 10px; border-radius:100px;">STATUS: ACTIVE</div>
+            </div>
+            <h1 style="font-family:'Cormorant Garamond',serif; font-size:2.6rem; font-weight:700; color:#fff; line-height:1.15; margin-bottom:6px;">{{ user['name'] }}</h1>
+            <p style="font-size:0.9rem; color:rgba(255,255,255,0.85);">
+                Destination: <strong style="color:#fff; font-weight:600;">{{ user['destination'] }}</strong>
+                &nbsp;·&nbsp; Duration: <strong style="color:#fff; font-weight:600;">{{ user['duration'] }} Days</strong>
+            </p>
+        </div>
+
+        <div style="display:flex; gap:0; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:18px; overflow:hidden; backdrop-filter:blur(8px);">
+            <div style="padding:20px 32px; text-align:center;">
+                <p style="font-size:0.65rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:6px;">Total Budget</p>
+                <p style="font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:700; color:#fff; line-height:1;">₹{{ user['budget'] }}</p>
+            </div>
+            <div style="width:1px; background:rgba(255,255,255,0.15);"></div>
+            <div style="padding:20px 32px; text-align:center; background:rgba(255,255,255,0.03);">
+                <p style="font-size:0.65rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:6px;">Remaining Wallet</p>
+                <p id="wallet-display" style="font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:700; color:#a3e635; line-height:1;">₹{{ user['remaining_wallet'] }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="padding:28px 32px; margin-bottom:32px; border-radius:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="width:42px; height:42px; border-radius:12px; background:var(--lav-lt); border:1px solid var(--lav); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="20" height="20" fill="none" stroke="#7b6faa" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:700; color:var(--ink); margin-bottom:2px;">Gemini Spatial Lens Engine</h3>
+                    <p style="font-size:0.78rem; color:var(--ink-soft);">Hardware spatial weights deployment engine linked to dynamic environment feeds.</p>
+                </div>
+            </div>
+            <div id="tts-status-box" style="display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:8px; background:var(--sand-lt); border:1px solid var(--border); font-size:0.75rem; color:var(--ink-mid);">
+                <span style="width:8px; height:8px; border-radius:50%; background:#7b6faa;"></span>
+                <span id="tts-status-text">Voice Assistant: Idle</span>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:24px;">
+            <div style="display:flex; flex-direction:column; justify-content:center; gap:14px;">
+                <div>
+                    <label class="field-label" style="font-weight:600; font-size:0.8rem; margin-bottom:6px; display:block;">Voice Instruction Token</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <input type="text" id="voice-query" placeholder="Click mic to input spatial payload..." class="field-input" style="width:100%; padding:12px 44px 12px 14px; border-radius:10px; border:1px solid var(--border);">
+                        <button type="button" onclick="toggleSpeechRecognition()" id="mic-btn" style="position:absolute; right:6px; background:none; border:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Trigger Mic Matrix">
+                            <svg id="mic-icon" width="18" height="18" fill="none" stroke="#7b6faa" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="captureEnvironment()" id="scan-btn" style="flex:1; background:linear-gradient(135deg,#8b80c4,#6f84c0); color:#fff; border:none; border-radius:10px; padding:12px; font-weight:600; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span id="scan-spinner" class="hidden" style="width:15px; height:15px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite;"></span>
+                        <span>Scan Environment Frame</span>
+                    </button>
+                    <button onclick="stopAssistantSpeech()" id="stop-speech-btn" class="hidden" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; border-radius:10px; padding:0 14px; cursor:pointer;">Mute 🔇</button>
+                </div>
+            </div>
+            <div style="background:var(--sand-lt); border:1px solid var(--border); border-radius:14px; padding:18px; min-height:120px; max-height:180px; overflow-y:auto;" class="premium-scroll">
+                <div id="lens-output" class="prose-output" style="font-size:0.85rem; color:var(--ink-mid); line-height:1.5;">
+                    <span style="color:var(--ink-soft); font-style:italic;">No active scan matrices loaded.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="border-bottom:1px solid var(--border); display:flex; gap:8px; margin-bottom:28px;">
+        <button class="dashboard-tab active" onclick="switchWorkspaceTab('tab-itinerary', this)">✨ AI Itinerary Timeline</button>
+        <button class="dashboard-tab" onclick="switchWorkspaceTab('tab-transit', this)">✈️ Standalone Transit Hub</button>
+        <button class="dashboard-tab" onclick="switchWorkspaceTab('tab-stays', this)">🏨 Premium Accommodation Stays</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 340px; gap:28px; align-items:start;">
+
+        <div>
+
+            <div id="tab-itinerary" class="tab-content-panel">
+                <div class="card" style="padding:32px; border-radius:16px; min-height:500px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                        <div>
+                            <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:700; color:var(--ink); margin-bottom:4px;">Dynamic Travel Route Timeline</h2>
+                            <p style="font-size:0.82rem; color:var(--ink-soft);">Complete comprehensive global itinerary map optimized via computational engine logic.</p>
+                        </div>
+                        <button onclick="triggerItineraryGeneration()" id="itinerary-btn" class="btn-dark" style="background:#4e7e56; padding:10px 20px; font-size:0.85rem; border-radius:8px;">
+                            ⚡ Run Route Engine
+                        </button>
+                    </div>
+
+                    <div style="background:var(--sage-lt); border:1px solid var(--sage); border-radius:16px; padding:28px; min-height:400px;">
+                        <div id="itinerary-loader" class="hidden" style="text-align:center; padding:100px 0;">
+                            <div style="width:36px; height:36px; border:3px solid var(--sage); border-top-color:#4e7e56; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px;"></div>
+                            <p style="font-size:0.82rem; color:var(--ink-soft); font-weight:500;">Slicing temporal constraints via Gemini Core Pipeline...</p>
+                        </div>
+                        <div id="itinerary-content" class="prose-output" style="font-size:0.95rem; line-height:1.7; color:#2c3e2f;">
+                            <p style="color:var(--ink-soft); font-style:italic;">Your complete chronological timeline will map out horizontally and vertically over the full page context structure here once triggered.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-transit" class="tab-content-panel hidden">
+                <div class="card" style="padding:32px; border-radius:16px;">
+                    <div style="margin-bottom:24px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                        <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:700; color:var(--ink); margin-bottom:4px;">Transit &amp; Route Logistics Engine</h2>
+                        <p style="font-size:0.82rem; color:var(--ink-soft);">Secure booking terminal mapped against remaining computational wallet balances.</p>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="ota-row-card" style="border-left:4px solid var(--sky); background:var(--sky-lt);">
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div style="font-size:1.8rem; background:rgba(255,255,255,0.8); width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">✈️</div>
+                                <div>
+                                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:var(--sky); color:#1e4d61; border-radius:4px; padding:2px 8px;">Premium Sky Tier</span>
+                                    <h4 style="font-size:1rem; font-weight:700; color:var(--ink); margin:4px 0 2px;">Transit Option Vector Alpha</h4>
+                                    <p style="font-size:0.8rem; color:var(--ink-soft);">High-speed trans-regional corridor bypass network. Duration: ~4 hrs.</p>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('book_item') }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="item_type" value="FLIGHT">
+                                <input type="hidden" name="item_name" value="Transit Option Vector Alpha (Flight)">
+                                <input type="hidden" name="cost" value="12500">
+                                <button type="submit" class="btn-dark" style="background:#1e4d61; padding:12px 24px; border-radius:8px; font-weight:600;">Reserve Flight • ₹12,500</button>
+                            </form>
+                        </div>
+
+                        <div class="ota-row-card" style="border-left:4px solid var(--sage); background:var(--sage-lt);">
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div style="font-size:1.8rem; background:rgba(255,255,255,0.8); width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">🚄</div>
+                                <div>
+                                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:#bbdcbe; color:#244d2b; border-radius:4px; padding:2px 8px;">Optimal Budget Match</span>
+                                    <h4 style="font-size:1rem; font-weight:700; color:var(--ink); margin:4px 0 2px;">Express Bullet Line Regional Pass</h4>
+                                    <p style="font-size:0.8rem; color:var(--ink-soft);">Low-impact carbon tracking corridor grid system. Duration: ~8 hrs.</p>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('book_item') }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="item_type" value="TRAIN">
+                                <input type="hidden" name="item_name" value="Express Bullet Line Train Ticket">
+                                <input type="hidden" name="cost" value="2200">
+                                <button type="submit" class="btn-dark" style="background:#244d2b; padding:12px 24px; border-radius:8px; font-weight:600;">Book Ticket • ₹2,200</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-stays" class="tab-content-panel hidden">
+                <div class="card" style="padding:32px; border-radius:16px;">
+                    <div style="margin-bottom:24px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                        <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:700; color:var(--ink); margin-bottom:4px;">Premium Lodging &amp; Accommodations</h2>
+                        <p style="font-size:0.82rem; color:var(--ink-soft);">Computational environment mapping for secure localized spatial hotel frameworks.</p>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="ota-row-card" style="border-left:4px solid var(--rose); background:var(--rose-lt);">
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div style="font-size:1.8rem; background:rgba(255,255,255,0.8); width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">🏨</div>
+                                <div>
+                                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:var(--rose); color:#6b261d; border-radius:4px; padding:2px 8px;">Luxury Base Tier</span>
+                                    <h4 style="font-size:1rem; font-weight:700; color:var(--ink); margin:4px 0 2px;">Grand Palace Luxury Estate Stay</h4>
+                                    <p style="font-size:0.8rem; color:var(--ink-soft);">Premium central-district smart architecture system automation integration.</p>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('book_item') }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="item_type" value="HOTEL">
+                                <input type="hidden" name="item_name" value="Grand Palace Luxury Stay">
+                                <input type="hidden" name="cost" value="4500">
+                                <button type="submit" class="btn-dark" style="background:#6b261d; padding:12px 24px; border-radius:8px; font-weight:600;">Reserve Suite • ₹4,500</button>
+                            </form>
+                        </div>
+
+                        <div class="ota-row-card" style="border-left:4px solid #cbd5e1; background:#f8fafc;">
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div style="font-size:1.8rem; background:rgba(255,255,255,0.8); width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.02);">🛖</div>
+                                <div>
+                                    <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; background:#cbd5e1; color:#334155; border-radius:4px; padding:2px 8px;">Eco-Optimized Match</span>
+                                    <h4 style="font-size:1rem; font-weight:700; color:var(--ink); margin:4px 0 2px;">Urban Backpack Eco-Hostel Vault</h4>
+                                    <p style="font-size:0.8rem; color:var(--ink-soft);">High-density sustainable exploration module setup. Highly Recommended.</p>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('book_item') }}" method="POST" style="margin:0;">
+                                <input type="hidden" name="item_type" value="HOTEL">
+                                <input type="hidden" name="item_name" value="Urban Backpack Eco Hostel Unit">
+                                <input type="hidden" name="cost" value="1450">
+                                <button type="submit" class="btn-dark" style="background:#334155; padding:12px 24px; border-radius:8px; font-weight:600;">Book Space • ₹1,450</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:24px;">
+
+            <div class="card" style="padding:24px; border-radius:16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                    <div style="width:8px; height:8px; border-radius:50%; background:#c96b5e;"></div>
+                    <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:700; color:var(--ink);">Hardware Diagnostics</h3>
+                </div>
+
+                <div style="padding:16px; background:var(--sand-lt); border:1px solid var(--border); border-radius:12px; margin-bottom:12px;">
+                    <p style="font-size:0.65rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px;">Kinetic Anomaly Vector</p>
+                    <div style="display:flex; align-items:baseline; gap:6px;">
+                        <span id="magnitude-reading" style="font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:700; color:var(--ink); line-height:1;">9.81</span>
+                        <span style="font-size:0.75rem; color:var(--ink-soft); font-weight:600;">m/s²</span>
+                    </div>
+                </div>
+
+                <div style="border:1px solid var(--border); border-radius:12px; overflow:hidden; font-size:0.78rem; background:#fff;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border);">
+                        <span style="color:var(--ink-soft);">DB Pipeline</span>
+                        <span style="font-weight:700; color:#4e7e56; font-size:0.68rem; background:var(--sage-lt); padding:2px 8px; border-radius:100px;">ONLINE</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;">
+                        <span style="color:var(--ink-soft);">Guardian Link</span>
+                        <span style="font-weight:600; color:var(--ink);">{{ user['guardian_name'] }}</span>
+                    </div>
+                </div>
+
+                <div style="padding:14px; background:#fef5f4; border:1px solid #f5c0ba; border-radius:12px; margin-top:14px;">
+                    <button onclick="injectSimulatedFall()" style="width:100%; padding:10px; background:#c9403a; color:#fff; border:none; border-radius:8px; font-size:0.78rem; font-weight:600; cursor:pointer;">
+                        Inject 32.0 m/s² Collision
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" style="padding:24px; border-radius:16px;">
+                <p style="font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:12px;">Secure Wallet Ledger</p>
+                <div style="display:flex; flex-direction:column; gap:8px; max-height:240px; overflow-y:auto;" class="premium-scroll">
+                    {% for booking in bookings %}
+                        <div style="display:flex; flex-direction:column; gap:4px; padding:10px; background:var(--sand-lt); border:1px solid var(--border); border-radius:8px; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:700; color:#334155; font-size:0.65rem; background:#e2e8f0; padding:1px 4px; border-radius:3px;">{{ booking['item_type'] }}</span>
+                                <span style="font-weight:700; color:#b91c1c;">−₹{{ booking['cost'] }}</span>
+                            </div>
+                            <span style="color:var(--ink-mid); font-weight:500; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">{{ booking['item_name'] }}</span>
+                        </div>
+                    {% else %}
+                        <p style="font-size:0.78rem; color:var(--ink-soft); font-style:italic; text-align:center; padding:12px 0;">No active system bookings logs.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- WORKSPACE TAB ORCHESTRATION ENGINE ---
+    function switchWorkspaceTab(tabId, buttonElement) {
+        // Hide all active content views
+        document.querySelectorAll('.tab-content-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        // Remove active state classes from tab selectors
+        document.querySelectorAll('.dashboard-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected workspace layout panel and toggle visual states
+        document.getElementById(tabId).classList.remove('hidden');
+        buttonElement.classList.add('active');
+    }
+
+    // --- BROWSER-SAFE SPEECH SYNTHESIS ENGINE (TTS) ---
+    const synth = window.speechSynthesis;
+    let currentUtterance = null;
+
+    function speakAssistantResponse(textToSpeak) {
+        if (!synth) return;
+        synth.cancel();
+        
+        const cleanText = textToSpeak.replace(/[\*#_`\-]/g, '').trim();
+        currentUtterance = new SpeechSynthesisUtterance(cleanText);
+        
+        currentUtterance.onstart = () => {
+            document.getElementById("tts-status-text").innerText = "Voice Assistant: Speaking 🔊";
+            document.getElementById("stop-speech-btn").classList.remove("hidden");
+        };
+        currentUtterance.onend = () => {
+            document.getElementById("tts-status-text").innerText = "Voice Assistant: Idle";
+            document.getElementById("stop-speech-btn").classList.add("hidden");
+        };
+        currentUtterance.onerror = () => {
+            document.getElementById("tts-status-text").innerText = "Voice Assistant: Idle";
+            document.getElementById("stop-speech-btn").classList.add("hidden");
+        };
+
+        currentUtterance.pitch = 1.0;
+        currentUtterance.rate = 1.0; 
+        synth.speak(currentUtterance);
+    }
+
+    function stopAssistantSpeech() {
+        if (synth) {
+            synth.cancel();
+            document.getElementById("tts-status-text").innerText = "Voice Assistant: Muted 🔇";
+            document.getElementById("stop-speech-btn").classList.add("hidden");
+        }
+    }
+
+    // --- BROWSER-SAFE SPEECH RECOGNITION INTERFACE (STT) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-IN';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isListening = true;
+            document.getElementById("mic-btn").style.background = "#ef4444";
+            document.getElementById("mic-btn").style.animation = "micGlow 1.2s infinite";
+            document.getElementById("mic-icon").style.stroke = "#fff";
+            document.getElementById("voice-query").placeholder = "Listening to input payload...";
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            document.getElementById("mic-btn").style.background = "none";
+            document.getElementById("mic-btn").style.animation = "none";
+            document.getElementById("mic-icon").style.stroke = "#7b6faa";
+            document.getElementById("voice-query").placeholder = "Click mic to input spatial payload...";
+        };
+
+        recognition.onresult = (event) => {
+            document.getElementById("voice-query").value = event.results[0][0].transcript;
+            captureEnvironment();
+        };
+    } else {
+        document.getElementById("mic-btn").style.display = "none";
+    }
+
+    function toggleSpeechRecognition() {
+        if (!recognition) return;
+        if (isListening) { recognition.stop(); } else { recognition.start(); }
+    }
+
+    // --- SYSTEM ORCHESTRATION PIPELINES ---
+    function triggerItineraryGeneration() {
+        const loader = document.getElementById("itinerary-loader");
+        const content = document.getElementById("itinerary-content");
+        loader.classList.remove("hidden");
+        content.classList.add("hidden");
+
+        fetch('/generate-itinerary', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            loader.classList.add("hidden");
+            content.classList.remove("hidden");
+            if(data.itinerary) {
+                content.innerHTML = marked.parse(data.itinerary);
+                speakAssistantResponse("Global route parameter mapping processing complete. Full-width timeline compiled successfully.");
+            } else {
+                content.innerText = data.error || "Generation connection pipeline failed.";
+            }
+        });
+    }
+
+    function captureEnvironment() {
+        const query = document.getElementById("voice-query").value;
+        const btn = document.getElementById("scan-btn");
+        const spinner = document.getElementById("scan-spinner");
+        const output = document.getElementById("lens-output");
+
+        btn.disabled = true;
+        spinner.classList.remove("hidden");
+        output.innerText = "Processing system weights snapshot mapping...";
+
+        const formData = new FormData();
+        formData.append("voice_query", query);
+
+        fetch('/scan-environment', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            spinner.classList.add("hidden");
+            
+            if (data.error) {
+                output.innerText = "Error: " + data.error;
+                return;
+            }
+
+            output.innerHTML = marked.parse(data.analysis);
+            speakAssistantResponse(data.analysis);
+
+            if (data.triggered_action) {
+                output.innerHTML += `
+                    <div style="margin-top:14px; padding:12px 14px; background:var(--sage-lt); border:1px solid var(--sage); border-radius:10px; font-size:0.78rem; color:#2d5c3a;">
+                        <strong>⚡ Automated Action:</strong> Executed booking for <strong>${data.triggered_action.name}</strong>.
+                    </div>
+                `;
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            spinner.classList.add("hidden");
+            output.innerText = "Hardware connection loss encountered.";
+        });
+    }
+
+    function injectSimulatedFall() {
+        fetch('/api/security-check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: "{{ user['id'] }}",
+                ax: 22.0, ay: 14.0, az: 18.0
+            })
+        });
+    }
+
+   // --- LIVE SSE MONITOR STREAM DOCKING (WITH DISCONNECTION GUARD) ---
+const dashEventSource = new EventSource("/stream-telemetry");
+
+dashEventSource.onmessage = function(event) {
+    try {
+        const data = JSON.parse(event.data);
+        
+        // 🌟 FIXED REAL-TIME HANDSHAKE BADGE UPDATER (FOR TOP NAV LAYER)
+        const navBadge = document.getElementById("top-nav-sse-badge");
+        if (navBadge) {
+            // Agar magnitude successfully read ho rahi hai, hardware synchronized hai
+            if (data && data.magnitude !== undefined && data.magnitude > 0) {
+                navBadge.innerText = "🟢 Hardware Synchronized";
+                navBadge.style.background = "rgba(163, 230, 53, 0.15)";
+                navBadge.style.border = "1px solid #a3e635";
+                navBadge.style.color = "#a3e635";
+                navBadge.style.animation = "none";
+            } else {
+                navBadge.innerText = "Awaiting Device Synchronization...";
+                navBadge.className = "sse-badge-waiting";
+                navBadge.style.background = "";
+                navBadge.style.border = "";
+                navBadge.style.color = "";
+            }
+        }
+
+        // GUARD: Agar data khali hai, zeroed out hai, ya explicit flag missing hai, ignore computational routing
+        if (!data || data.magnitude === undefined || data.magnitude === 0) {
+            document.getElementById("magnitude-reading").innerText = "0.00";
+            return; // Exit early, stop accidental SOS loops
+        }
+
+        // Display safe validation parameters
+        document.getElementById("magnitude-reading").innerText = data.magnitude;
+        
+        // Strict evaluation: only trigger if emergency explicitly flags TRUE from real physics data
+        if (data.emergency === true && !emergencyActive) { 
+            triggerEmergencyModal(); 
+        }
+    } catch (err) {
+        console.log("Hardware offline or empty JSON buffer stream:", err);
+    }
+};
+
+    // --- EMERGENCY COUNTDOWN CORE TRACKING ---
+    let tickerValue = 10;
+    let timerInterval = null;
+    let emergencyActive = false;
+
+    function triggerEmergencyModal() {
+        emergencyActive = true;
+        tickerValue = 10;
+        document.getElementById("countdown-timer").innerText = tickerValue;
+        document.getElementById("sos-modal").classList.remove("hidden");
+        speakAssistantResponse("Warning. Critical kinetic drop collision vectors registered. Initializing automated network dispatch.");
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            tickerValue--;
+            document.getElementById("countdown-timer").innerText = tickerValue;
+            if (tickerValue <= 0) { clearInterval(timerInterval); executeSOSDispatch(); }
+        }, 1000);
+    }
+
+    function dismissSOS() {
+        clearInterval(timerInterval);
+        stopAssistantSpeech();
+        document.getElementById("sos-modal").classList.add("hidden");
+        setTimeout(() => { emergencyActive = false; }, 5000);
+    }
+
+    function executeSOSDispatch() {
+        clearInterval(timerInterval);
+        document.getElementById("countdown-timer").innerText = "ROUTING...";
+        speakAssistantResponse("Transmitting geolocation coordinates.");
+
+        fetch('/trigger-sos', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(() => { document.getElementById("sos-modal").classList.add("hidden"); emergencyActive = false; });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,175 @@
+﻿{% extends "layout.html" %}
+{% block content %}
+
+<style>
+    @keyframes diagnosticPulse {
+        0% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(230, 172, 48, 0.5); }
+        70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 8px rgba(230, 172, 48, 0); }
+        100% { transform: scale(0.95); opacity: 0.5; box-shadow: 0 0 0 0 rgba(230, 172, 48, 0); }
+    }
+    @keyframes activeGreenPulse {
+        0% { transform: scale(0.95); opacity: 0.6; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+        70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); opacity: 0.6; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .field-input:focus {
+        border-color: #4a8e97 !important;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(74, 142, 151, 0.15);
+    }
+</style>
+
+<div style="max-width:760px; margin:0 auto; padding:48px 24px;">
+
+    <div style="margin-bottom:36px;">
+        <p style="font-size:0.7rem; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;">Step 1 of 1</p>
+        <h2 style="font-family:'Cormorant Garamond',serif; font-size:2.6rem; font-weight:700; color:var(--ink); line-height:1.1; margin-bottom:10px;">Create Your Traveler Profile</h2>
+        <p style="font-size:0.9rem; color:var(--ink-soft); line-height:1.6;">Tell us about your journey and preferences so TravelSense can hyper-personalize your experience while keeping you safe.</p>
+    </div>
+
+    <div class="card" style="padding:40px; border-radius:16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+        <form action="{{ url_for('register') }}" method="POST">
+
+            <div style="margin-bottom:8px;">
+                <p style="font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-weight:600; color:var(--ink-mid); margin-bottom:22px;">Personal &amp; Contact Details</p>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div>
+                    <label class="field-label">Full Name</label>
+                    <input type="text" name="name" required class="field-input" placeholder="Your full name" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Email Address</label>
+                    <input type="email" name="email" required class="field-input" placeholder="you@email.com" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Mobile Phone</label>
+                    <input type="text" name="phone" required class="field-input" placeholder="+91 XXXXX XXXXX" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Age</label>
+                    <input type="number" name="age" required min="1" max="120" class="field-input" placeholder="e.g. 24" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+            </div>
+
+            <div style="border-top:1px solid var(--border); margin:28px 0 24px;"></div>
+
+            <div style="margin-bottom:8px;">
+                <p style="font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-weight:600; color:var(--ink-mid); margin-bottom:22px;">TravelSense Configuration Matrix</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div>
+                    <label class="field-label">Destination</label>
+                    <input type="text" name="destination" placeholder="e.g. Jaipur, Manali, Goa" required class="field-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Total Budget (INR)</label>
+                    <input type="number" name="budget" required class="field-input" placeholder="e.g. 50000" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Trip Duration (Days)</label>
+                    <input type="number" name="duration" required class="field-input" placeholder="e.g. 7" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Trip Purpose</label>
+                    <select name="purpose" required class="field-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:#fff;">
+                        <option value="Adventure">Adventure</option>
+                        <option value="Spiritual">Spiritual</option>
+                        <option value="Heritage">Heritage</option>
+                        <option value="Leisure">Leisure</option>
+                        <option value="Family">Family</option>
+                        <option value="Solo">Solo</option>
+                        <option value="Romantic">Romantic</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label">Travel Group Type</label>
+                    <select name="group_type" required class="field-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:#fff;">
+                        <option value="Solo">Solo Traveler</option>
+                        <option value="Couple">Couple</option>
+                        <option value="Family">With Family</option>
+                        <option value="Friends">With Friends</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label">Physical Fitness Level</label>
+                    <select name="fitness" required class="field-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:#fff;">
+                        <option value="Low">Low (Relaxed pacing)</option>
+                        <option value="Medium">Medium (Moderate walking/trekking)</option>
+                        <option value="High">High (Intense physical activity)</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="field-label">Personal Interests &amp; Hobbies</label>
+                    <input type="text" name="interests" required class="field-input" placeholder="e.g. Street photography, trying local street food, historical architectures" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+            </div>
+
+            <div style="border-top:1px solid var(--border); margin:28px 0 24px;"></div>
+
+            <div style="margin-bottom:22px;">
+                <p style="font-family:'Cormorant Garamond',serif; font-size:1.25rem; font-weight:600; color:var(--ink-mid); margin-bottom:6px;">Emergency Guardian Details</p>
+                <p style="font-size:0.8rem; color:var(--ink-soft);">This contact will be notified automatically if an emergency is detected.</p>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px;">
+                <div>
+                    <label class="field-label">Guardian Name</label>
+                    <input type="text" name="g_name" required class="field-input" placeholder="Emergency contact name" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div>
+                    <label class="field-label">Guardian Phone</label>
+                    <input type="text" name="g_phone" required class="field-input" placeholder="+91 XXXXX XXXXX" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label class="field-label">Guardian Email</label>
+                    <input type="email" name="g_email" placeholder="guardian@email.com" required class="field-input" style="width:100%; padding:10px 14px; border-radius:8px; border:1px solid var(--border);">
+                </div>
+            </div>
+
+            <div id="sync-state-badge" style="display:flex; align-items:center; gap:14px; padding:16px 20px; border-radius:14px; border:1px solid #f5d89a; background:#fffbf0; color:#8a6520; font-size:0.82rem; margin-bottom:28px; transition: all 0.4s ease;">
+                <div id="sync-dot" style="width:10px; height:10px; border-radius:50%; background:#e6ac30; flex-shrink:0; animation: diagnosticPulse 1.5s infinite;"></div>
+                <div id="sync-text"><strong>Awaiting Wearable Synchronization...</strong> Hardware state shifts automatically upon receiving external telemetry payloads.</div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%; font-size:0.95rem; padding:12px; font-weight:600; cursor:pointer;">
+                Register &amp; Initialize Dashboard
+            </button>
+        </form>
+
+        <p style="margin-top:22px; font-size:0.85rem; color:var(--ink-soft); text-align:center;">
+            Already registered? <a href="{{ url_for('signin') }}" style="font-weight:600; color:#4a8e97; text-decoration:none;">Sign in here</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    function checkHardwareSync() {
+        // 🔑 FIXED: Point to the specialized JSON route instead of the SSE raw stream
+        fetch('/api/hardware-status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.hardware_active === true) {
+                    const badge = document.getElementById('sync-state-badge');
+                    const dot = document.getElementById('sync-dot');
+                    const text = document.getElementById('sync-text');
+                    
+                    badge.style.border = '1px solid #a7f3d0';
+                    badge.style.background = '#f0fdf4';
+                    badge.style.color = '#065f46';
+                    
+                    dot.style.background = '#10b981';
+                    dot.style.animation = 'activeGreenPulse 1.5s infinite';
+                    
+                    text.innerHTML = '<strong>Wearable Node Connected!</strong> Live serial channel successfully locked on port. Ready for deployment.';
+                }
+            })
+            .catch(err => console.log("Waiting for backend telemetry route active..."));
+    }
+
+    setInterval(checkHardwareSync, 2000);
+</script>
+
+{% endblock %}

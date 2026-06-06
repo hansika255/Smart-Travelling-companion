@@ -1,0 +1,59 @@
+﻿{% extends "layout.html" %}
+{% block content %}
+<div style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:40px 24px;">
+    <div style="width:100%;max-width:480px;">
+
+        <!-- Decorative top accent -->
+        <div style="text-align:center;margin-bottom:32px;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#b5c9b7,#b8d4e0);margin-bottom:18px;">
+                <svg width="26" height="26" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </div>
+            <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:700;color:var(--ink);line-height:1.15;margin-bottom:8px;">Welcome back.</h1>
+            <p style="font-size:0.9rem;color:var(--ink-soft);">Sign in with your registered email to continue your journey.</p>
+        </div>
+
+        <div class="card" style="padding:36px 40px;">
+            {% if error %}
+                <div style="margin-bottom:20px;padding:14px 18px;border-radius:12px;border:1px solid #f5c0ba;background:#fef4f3;color:#a83228;font-size:0.85rem;">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('signin') }}">
+                <div style="margin-bottom:24px;">
+                    <label class="field-label">Registered Email</label>
+                    <input type="email" name="email" required class="field-input" placeholder="you@email.com">
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%;font-size:0.95rem;">
+                    Continue with Email
+                </button>
+            </form>
+
+            <div style="position:relative;text-align:center;margin:22px 0;">
+                <div style="border-top:1px solid var(--border);"></div>
+                <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#fff;padding:0 12px;font-size:0.75rem;color:var(--ink-soft);">or</span>
+            </div>
+
+            <p style="text-align:center;font-size:0.85rem;color:var(--ink-soft);">
+                New to Happy Routes? <a href="{{ url_for('register') }}" style="font-weight:600;color:#4a8e97;text-decoration:none;">Create a profile</a>
+            </p>
+        </div>
+
+        <!-- Trust signals -->
+        <div style="display:flex;justify-content:center;gap:28px;margin-top:24px;">
+            <div style="text-align:center;">
+                <p style="font-size:0.65rem;color:var(--ink-soft);letter-spacing:0.06em;text-transform:uppercase;">AI-Powered</p>
+            </div>
+            <div style="width:1px;background:var(--border);"></div>
+            <div style="text-align:center;">
+                <p style="font-size:0.65rem;color:var(--ink-soft);letter-spacing:0.06em;text-transform:uppercase;">SOS Protection</p>
+            </div>
+            <div style="width:1px;background:var(--border);"></div>
+            <div style="text-align:center;">
+                <p style="font-size:0.65rem;color:var(--ink-soft);letter-spacing:0.06em;text-transform:uppercase;">Live Telemetry</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
